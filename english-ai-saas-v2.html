@@ -1,0 +1,2579 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>FluentAI</title>
+  <style>
+    :root {
+      --bg: #07070e;
+      --glass: rgba(255, 255, 255, 0.06);
+      --glass-hi: rgba(255, 255, 255, 0.1);
+      --border: rgba(255, 255, 255, 0.1);
+      --border-hi: rgba(255, 255, 255, 0.18);
+      --purple: #8b5cf6;
+      --purple-d: #6d28d9;
+      --purple-l: #a78bfa;
+      --pink: #ec4899;
+      --blue: #3b82f6;
+      --text: #fff;
+      --muted: rgba(255, 255, 255, 0.45);
+      --subtle: rgba(255, 255, 255, 0.2);
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --radius: 28px;
+      --blur: blur(28px) saturate(180%);
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+      --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.4);
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    button,
+    input {
+      color: inherit;
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.32);
+    }
+
+    #app {
+      min-height: 100vh;
+      min-height: 100dvh;
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      min-height: 100dvh;
+      width: min(100%, 520px);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      background: rgba(7, 7, 14, 0.72);
+    }
+
+    .orb-bg,
+    .orb-bg::before,
+    .orb-bg::after {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .orb-bg {
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(109, 40, 217, 0.42), transparent 32rem),
+        radial-gradient(circle at 100% 12%, rgba(59, 130, 246, 0.3), transparent 28rem),
+        radial-gradient(circle at 40% 110%, rgba(236, 72, 153, 0.22), transparent 34rem),
+        var(--bg);
+    }
+
+    .orb-bg::before {
+      content: "";
+      width: 36rem;
+      height: 36rem;
+      border-radius: 999px;
+      top: -12rem;
+      left: -12rem;
+      background: radial-gradient(circle, rgba(109, 40, 217, 0.4), transparent 70%);
+      filter: blur(78px);
+      animation: orbFloat 12s ease-in-out infinite;
+    }
+
+    .orb-bg::after {
+      content: "";
+      width: 34rem;
+      height: 34rem;
+      border-radius: 999px;
+      right: -14rem;
+      top: 7rem;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.28), transparent 70%);
+      filter: blur(90px);
+      animation: orbFloat2 15s ease-in-out infinite;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes scalePop {
+      from { opacity: 0; transform: scale(0.88); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(30px, -40px) scale(1.08); }
+    }
+
+    @keyframes orbFloat2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-25px, 35px) scale(1.05); }
+    }
+
+    @keyframes ringPulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.15); opacity: 0.15; }
+    }
+
+    @keyframes wave {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-5px); }
+    }
+
+    @keyframes barBounce {
+      0%, 100% { transform: scaleY(0.25); }
+      50% { transform: scaleY(1); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.42; }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
+
+    .fu { animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    .fi { animation: fadeIn 0.3s ease both; }
+    .sp { animation: scalePop 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    .d1 { animation-delay: 0.06s; }
+    .d2 { animation-delay: 0.12s; }
+    .d3 { animation-delay: 0.18s; }
+    .d4 { animation-delay: 0.24s; }
+    .d5 { animation-delay: 0.3s; }
+
+    .glass {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .glass-button {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s, border-color 0.2s, opacity 0.2s;
+      color: var(--text);
+    }
+
+    .glass-button:hover,
+    .glass-button:focus-visible {
+      background: var(--glass-hi);
+      border-color: var(--border-hi);
+      outline: none;
+    }
+
+    .primary-button {
+      min-height: 52px;
+      border-radius: 999px;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--purple-d), var(--purple) 62%, var(--pink));
+      color: #fff;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      box-shadow: 0 8px 32px rgba(139, 92, 246, 0.45);
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s, opacity 0.2s;
+    }
+
+    .primary-button:hover,
+    .primary-button:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 40px rgba(139, 92, 246, 0.55);
+      outline: none;
+    }
+
+    .primary-button:disabled {
+      transform: none;
+      background: #2a2a3a;
+      box-shadow: none;
+      cursor: not-allowed;
+      color: rgba(255, 255, 255, 0.28);
+    }
+
+    .grad-text {
+      background: linear-gradient(135deg, #fff 0%, var(--purple-l) 44%, var(--pink) 100%);
+      background-size: 200% auto;
+      color: transparent;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: shimmer 5s linear infinite;
+    }
+
+    .screen-center {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 38px 24px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .splash-mark {
+      width: 90px;
+      height: 90px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 44px;
+      background: linear-gradient(135deg, var(--purple-d), var(--purple) 50%, var(--pink));
+      box-shadow: 0 0 0 16px rgba(139, 92, 246, 0.12), 0 0 0 32px rgba(139, 92, 246, 0.06);
+    }
+
+    .entry-wrap {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 34px 24px 38px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-cluster {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      margin: 30px auto 14px;
+    }
+
+    .hero-main-avatar {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 110px;
+      height: 110px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 60px;
+      background: linear-gradient(135deg, rgba(109, 40, 217, 0.38), rgba(139, 92, 246, 0.25));
+      border: 2px solid rgba(139, 92, 246, 0.4);
+      box-shadow: 0 8px 40px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+    }
+
+    .orbit-avatar {
+      position: absolute;
+      width: var(--s);
+      height: var(--s);
+      left: var(--x);
+      top: var(--y);
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: calc(var(--s) * 0.52);
+      background: color-mix(in srgb, var(--c), transparent 86%);
+      border: 1.5px solid color-mix(in srgb, var(--c), transparent 62%);
+      box-shadow: 0 4px 16px color-mix(in srgb, var(--c), transparent 78%);
+      animation: orbFloat 10s ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+
+    .entry-title {
+      margin-top: 2px;
+      font-size: clamp(2.4rem, 12vw, 2.78rem);
+      line-height: 1.08;
+      letter-spacing: 0;
+      font-weight: 850;
+    }
+
+    .entry-copy {
+      width: min(100%, 310px);
+      margin: 16px auto 34px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .language-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      width: min(100%, 380px);
+      margin: 0 auto;
+    }
+
+    .language-card {
+      min-height: 138px;
+      border-radius: 24px;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s;
+    }
+
+    .language-card:hover,
+    .language-card:focus-visible {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.24);
+      outline: none;
+    }
+
+    .language-card strong {
+      font-size: 16px;
+    }
+
+    .language-card span:first-child {
+      font-size: 36px;
+    }
+
+    .language-card span:last-child {
+      color: rgba(255, 255, 255, 0.56);
+      font-size: 11px;
+    }
+
+    .social-proof {
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .avatar-stack {
+      display: flex;
+    }
+
+    .avatar-stack span {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      margin-left: -8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid var(--bg);
+      font-size: 14px;
+    }
+
+    .avatar-stack span:first-child {
+      margin-left: 0;
+    }
+
+    .bottom-note {
+      color: rgba(255, 255, 255, 0.22);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .onboard {
+      min-height: 100vh;
+      min-height: 100dvh;
+      width: min(100%, 480px);
+      margin: 0 auto;
+      padding: 56px 22px 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .progress-dots {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 36px;
+    }
+
+    .progress-dot {
+      flex: 1;
+      height: 4px;
+      border-radius: 4px;
+      background: var(--glass);
+      transition: flex 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.35s, box-shadow 0.35s;
+    }
+
+    .progress-dot.active {
+      flex: 2;
+      background: linear-gradient(90deg, var(--purple-d), var(--purple));
+      box-shadow: 0 0 12px rgba(139, 92, 246, 0.42);
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .step-label {
+      color: var(--purple-l);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .step h1 {
+      font-size: clamp(1.85rem, 9vw, 2rem);
+      line-height: 1.15;
+      font-weight: 850;
+      letter-spacing: 0;
+      white-space: pre-line;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .text-field {
+      border-radius: 18px;
+      padding: 4px 6px;
+      margin-top: 2px;
+    }
+
+    .text-field input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      padding: 14px 16px;
+      font-size: 17px;
+      font-weight: 550;
+    }
+
+    .choice-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .choice-card,
+    .goal-card,
+    .character-card {
+      cursor: pointer;
+      text-align: left;
+      color: var(--text);
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s, background 0.2s;
+    }
+
+    .choice-card {
+      border-radius: 20px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 82px;
+    }
+
+    .choice-card:hover,
+    .choice-card:focus-visible,
+    .goal-card:hover,
+    .goal-card:focus-visible,
+    .character-card:hover,
+    .character-card:focus-visible {
+      transform: translateY(-1px);
+      border-color: var(--border-hi);
+      outline: none;
+    }
+
+    .choice-card.selected,
+    .goal-card.selected,
+    .language-switch button.selected {
+      background: linear-gradient(135deg, rgba(109, 40, 217, 0.32), rgba(139, 92, 246, 0.2));
+      border-color: var(--purple);
+      box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.25), 0 8px 24px rgba(139, 92, 246, 0.15);
+    }
+
+    .choice-card .emoji {
+      font-size: 28px;
+    }
+
+    .choice-card strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .choice-card small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .check {
+      margin-left: auto;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: var(--purple);
+      font-size: 12px;
+      flex: 0 0 auto;
+    }
+
+    .goal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 11px;
+    }
+
+    .goal-card {
+      min-height: 98px;
+      border-radius: 20px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 7px;
+    }
+
+    .goal-card span {
+      font-size: 24px;
+    }
+
+    .goal-card strong {
+      font-size: 13px;
+    }
+
+    .main-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 92px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .tab-page {
+      padding: 28px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .home-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .home-header h1,
+    .tab-title {
+      font-size: 26px;
+      line-height: 1.14;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .muted-line {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .streak {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      color: var(--amber);
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .xp-card {
+      border-radius: 22px;
+      padding: 16px 18px;
+    }
+
+    .xp-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .xp-top strong {
+      color: var(--purple-l);
+      font-size: 13px;
+    }
+
+    .xp-track {
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .xp-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--purple-d), var(--purple) 70%, var(--pink));
+      box-shadow: 0 0 12px rgba(139, 92, 246, 0.42);
+      transition: width 0.7s;
+    }
+
+    .language-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .language-switch button {
+      min-height: 46px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--glass);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: 0.09em;
+      margin-bottom: 14px;
+    }
+
+    .character-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .character-card {
+      min-height: 92px;
+      border-radius: 24px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .character-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 3px;
+      background: linear-gradient(var(--char), color-mix(in srgb, var(--char), transparent 48%));
+      border-radius: 24px 0 0 24px;
+    }
+
+    .memoji {
+      width: var(--size, 56px);
+      height: var(--size, 56px);
+      border-radius: 999px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      position: relative;
+      font-size: calc(var(--size, 56px) * 0.52);
+      border: 1.5px solid color-mix(in srgb, var(--char, var(--purple)), transparent 66%);
+      background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--char, var(--purple)), transparent 82%), color-mix(in srgb, var(--char, var(--purple)), transparent 96%));
+      box-shadow: 0 4px 20px color-mix(in srgb, var(--char, var(--purple)), transparent 82%);
+    }
+
+    .memoji.speaking {
+      border-color: color-mix(in srgb, var(--char, var(--purple)), transparent 38%);
+      box-shadow: 0 4px 20px color-mix(in srgb, var(--char, var(--purple)), transparent 70%);
+    }
+
+    .memoji.speaking::before,
+    .memoji.speaking::after {
+      content: "";
+      position: absolute;
+      inset: -7px;
+      border-radius: inherit;
+      border: 2px solid var(--char, var(--purple));
+      opacity: 0.45;
+      animation: ringPulse 1.2s ease-in-out infinite;
+    }
+
+    .memoji.speaking::after {
+      inset: -13px;
+      border-width: 1.5px;
+      opacity: 0.2;
+      animation-delay: 0.28s;
+    }
+
+    .character-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .character-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .character-row h2 {
+      font-size: 15px;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+
+    .character-role {
+      color: var(--char);
+      font-size: 12px;
+      font-weight: 650;
+      margin-top: 3px;
+    }
+
+    .character-vibe {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+
+    .pill-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .pill.active {
+      color: var(--green);
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+    }
+
+    .chevron {
+      color: var(--muted);
+      font-size: 22px;
+      opacity: 0.52;
+      flex: 0 0 auto;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: min(100%, 520px);
+      padding: 0 20px calc(20px + env(safe-area-inset-bottom));
+      z-index: 20;
+    }
+
+    .nav-pill {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      border-radius: 30px;
+      padding: 6px;
+      background: rgba(12, 12, 20, 0.88);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+    }
+
+    .nav-pill button {
+      min-height: 56px;
+      border-radius: 24px;
+      cursor: pointer;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--muted);
+      transition: background 0.24s, color 0.24s, filter 0.24s;
+    }
+
+    .nav-pill button.selected {
+      background: linear-gradient(135deg, rgba(109, 40, 217, 0.72), rgba(139, 92, 246, 0.5));
+      color: #fff;
+    }
+
+    .nav-pill .nav-ico {
+      font-size: 20px;
+      filter: grayscale(0.4) opacity(0.45);
+    }
+
+    .nav-pill button.selected .nav-ico {
+      filter: none;
+    }
+
+    .nav-pill .nav-label {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stat-card {
+      border-radius: 22px;
+      padding: 16px;
+    }
+
+    .stat-card .stat-emoji {
+      font-size: 24px;
+    }
+
+    .stat-card strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1.1;
+      font-weight: 850;
+      letter-spacing: 0;
+      margin-top: 6px;
+      color: var(--stat-color);
+    }
+
+    .stat-card small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 3px;
+    }
+
+    .highlight-card {
+      border-radius: 22px;
+      padding: 18px;
+      background: linear-gradient(135deg, rgba(109, 40, 217, 0.22), rgba(139, 92, 246, 0.1));
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      box-shadow: 0 4px 24px rgba(139, 92, 246, 0.15);
+    }
+
+    .badges-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .badge-card {
+      min-height: 102px;
+      text-align: center;
+      border-radius: 18px;
+      padding: 14px 12px;
+      opacity: 0.42;
+    }
+
+    .badge-card.earned {
+      opacity: 1;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(167, 139, 250, 0.1));
+      border-color: rgba(139, 92, 246, 0.4);
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
+    }
+
+    .badge-card .badge-emoji {
+      font-size: 28px;
+      filter: grayscale(1);
+    }
+
+    .badge-card.earned .badge-emoji {
+      filter: none;
+    }
+
+    .badge-card strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .badge-card small {
+      color: var(--green);
+      font-size: 10px;
+      margin-top: 4px;
+      display: block;
+    }
+
+    .profile-card {
+      border-radius: 28px;
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .profile-avatar {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(109, 40, 217, 0.6), rgba(139, 92, 246, 0.4));
+      border: 2px solid rgba(139, 92, 246, 0.5);
+      box-shadow: 0 0 0 8px rgba(139, 92, 246, 0.08);
+      font-size: 38px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .profile-avatar::after {
+      content: "⚡";
+      position: absolute;
+      right: -2px;
+      bottom: -2px;
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: var(--amber);
+      color: #22150a;
+      font-size: 13px;
+      border: 2px solid var(--bg);
+    }
+
+    .profile-name {
+      font-size: 20px;
+      font-weight: 850;
+    }
+
+    .profile-tags {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .profile-tags .tag {
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .settings-card {
+      border-radius: 22px;
+      padding: 16px 18px;
+    }
+
+    .settings-title {
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+
+    .settings-row strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .settings-row small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .toggle {
+      width: 51px;
+      height: 31px;
+      border-radius: 999px;
+      padding: 3px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-start;
+      transition: background 0.22s;
+      flex: 0 0 auto;
+    }
+
+    .toggle.on {
+      background: linear-gradient(135deg, var(--purple-d), var(--purple));
+    }
+
+    .toggle::before {
+      content: "";
+      width: 25px;
+      height: 25px;
+      border-radius: 999px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      transform: translateX(0);
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .toggle.on::before {
+      transform: translateX(20px);
+    }
+
+    .voice-status {
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .profile-row {
+      border-radius: 16px;
+      padding: 13px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .profile-row span:first-child {
+      color: var(--muted);
+    }
+
+    .profile-row strong {
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .reset-button {
+      min-height: 47px;
+      border-radius: 16px;
+      padding: 13px 16px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .chat-shell {
+      min-height: 100vh;
+      min-height: 100dvh;
+      width: min(100%, 520px);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      position: relative;
+      z-index: 1;
+    }
+
+    .chat-shell::before {
+      content: "";
+      position: fixed;
+      z-index: 0;
+      top: -18%;
+      left: 50%;
+      width: 500px;
+      height: 500px;
+      border-radius: 999px;
+      transform: translateX(-50%);
+      background: radial-gradient(circle, color-mix(in srgb, var(--chat-color, var(--purple)), transparent 86%) 0%, transparent 65%);
+      filter: blur(60px);
+      pointer-events: none;
+    }
+
+    .chat-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(7, 7, 14, 0.86);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+    }
+
+    .icon-button {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 20px;
+      transition: background 0.18s, color 0.18s;
+    }
+
+    .icon-button:hover,
+    .icon-button:focus-visible {
+      background: rgba(255, 255, 255, 0.07);
+      color: #fff;
+      outline: none;
+    }
+
+    .chat-title {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .chat-title h1 {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.25;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .speaking-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--chat-color);
+      background: color-mix(in srgb, var(--chat-color), transparent 88%);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .eq {
+      height: 12px;
+      width: 16px;
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .eq span {
+      width: 3px;
+      height: 100%;
+      border-radius: 3px;
+      background: currentColor;
+      transform-origin: bottom;
+      animation: barBounce 0.65s ease-in-out infinite;
+    }
+
+    .eq span:nth-child(2) { animation-delay: 0.12s; }
+    .eq span:nth-child(3) { animation-delay: 0.24s; }
+
+    .chat-subtitle {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .online-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      flex: 0 0 auto;
+    }
+
+    .chat-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex: 0 0 auto;
+    }
+
+    .xp-pill {
+      color: var(--muted);
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .muted-banner {
+      position: relative;
+      z-index: 9;
+      padding: 7px 16px;
+      background: rgba(251, 191, 36, 0.08);
+      border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+      color: var(--amber);
+      font-size: 11px;
+    }
+
+    .message-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 20px 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .time-marker {
+      text-align: center;
+      color: var(--muted);
+      font-size: 11px;
+      margin: 4px 0 10px;
+    }
+
+    .message-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .message-row.user {
+      justify-content: flex-end;
+    }
+
+    .message-column {
+      max-width: 76%;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      align-items: flex-start;
+    }
+
+    .message-row.user .message-column {
+      align-items: flex-end;
+    }
+
+    .bubble {
+      border-radius: 18px 18px 18px 5px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.65;
+      word-break: break-word;
+      animation: fadeUp 0.25s ease;
+    }
+
+    .bubble.speaking {
+      border-color: var(--chat-color);
+    }
+
+    .message-row.user .bubble {
+      border: 0;
+      border-radius: 18px 18px 5px 18px;
+      background: linear-gradient(135deg, var(--purple-d), var(--purple) 70%, rgba(236, 72, 153, 0.2));
+      box-shadow: 0 4px 20px rgba(109, 40, 217, 0.4);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    .delivered {
+      color: rgba(255, 255, 255, 0.38);
+      font-size: 10px;
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    .hear-button {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 2px 4px;
+    }
+
+    .hear-button.active {
+      color: var(--chat-color);
+    }
+
+    .typing-bubble {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 18px;
+      border-radius: 18px 18px 18px 5px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--border);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.42);
+      animation: wave 1.2s ease-in-out infinite;
+    }
+
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    .bubble-wave {
+      height: 12px;
+      margin-top: 8px;
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      color: var(--chat-color);
+    }
+
+    .bubble-wave span {
+      width: 3px;
+      border-radius: 4px;
+      background: currentColor;
+      transform-origin: bottom;
+      animation: barBounce 0.65s ease-in-out infinite;
+    }
+
+    .bubble-wave span:nth-child(1) { height: 8px; }
+    .bubble-wave span:nth-child(2) { height: 12px; animation-delay: 0.12s; }
+    .bubble-wave span:nth-child(3) { height: 7px; animation-delay: 0.24s; }
+    .bubble-wave span:nth-child(4) { height: 11px; animation-delay: 0.08s; }
+    .bubble-wave span:nth-child(5) { height: 6px; animation-delay: 0.2s; }
+
+    .chat-input {
+      position: relative;
+      z-index: 10;
+      padding: 10px 14px calc(22px + env(safe-area-inset-bottom));
+      display: flex;
+      align-items: flex-end;
+      gap: 9px;
+      background: rgba(7, 7, 14, 0.9);
+      border-top: 1px solid var(--border);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+    }
+
+    .chat-field {
+      flex: 1;
+      min-height: 46px;
+      border-radius: 28px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+    }
+
+    .chat-field input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .round-button {
+      width: 46px;
+      height: 46px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1.5px solid var(--border);
+      font-size: 18px;
+    }
+
+    .round-button.recording {
+      border-color: var(--red);
+      background: rgba(248, 113, 113, 0.2);
+      animation: pulse 1s infinite;
+    }
+
+    .round-button.send {
+      background: rgba(255, 255, 255, 0.06);
+      border: 0;
+      color: rgba(255, 255, 255, 0.32);
+      cursor: not-allowed;
+    }
+
+    .round-button.send.ready {
+      color: #fff;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--purple-d), var(--purple));
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.5);
+    }
+
+    @media (min-width: 720px) {
+      body {
+        background:
+          radial-gradient(circle at 12% 18%, rgba(139, 92, 246, 0.22), transparent 26rem),
+          radial-gradient(circle at 85% 22%, rgba(59, 130, 246, 0.14), transparent 24rem),
+          var(--bg);
+      }
+
+      .app-shell,
+      .chat-shell {
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 24px 80px rgba(0, 0, 0, 0.38);
+      }
+    }
+
+    @media (max-width: 370px) {
+      .entry-wrap { padding-inline: 18px; }
+      .hero-cluster { transform: scale(0.9); margin-bottom: 2px; }
+      .language-grid { gap: 10px; }
+      .tab-page { padding-inline: 14px; }
+      .character-card { padding-inline: 13px; gap: 11px; }
+      .pill-row { display: none; }
+      .chat-actions .xp-pill { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" aria-live="polite"></div>
+
+  <script>
+    const T = {
+      purple: "#8B5CF6",
+      purpleD: "#6D28D9",
+      purpleL: "#A78BFA",
+      pink: "#EC4899",
+      blue: "#3B82F6",
+      green: "#34D399",
+      amber: "#FBBF24",
+      red: "#F87171"
+    };
+
+    const MEMOJI = {
+      en_barista: "👩🏻‍🦰",
+      en_driver: "👨🏾",
+      en_friend: "🧑🏼",
+      en_coworker: "👩🏼‍💼",
+      en_cashier: "👩🏽",
+      en_teacher: "👨🏻‍🏫",
+      es_barista: "👩🏽‍🦱",
+      es_driver: "👨🏽",
+      es_friend: "🧑🏽",
+      es_coworker: "👩🏽‍💼",
+      es_cashier: "👩🏽",
+      es_teacher: "👩🏻‍🏫"
+    };
+
+    const VOICES = {
+      en_barista: { lang: "en-US", rate: 1.0, pitch: 1.15, prefer: ["Samantha", "Karen", "Zira"] },
+      en_driver: { lang: "en-US", rate: 1.05, pitch: 0.88, prefer: ["Alex", "David", "Microsoft David"] },
+      en_friend: { lang: "en-US", rate: 1.12, pitch: 0.95, prefer: ["Alex", "Tom"] },
+      en_coworker: { lang: "en-US", rate: 0.97, pitch: 1.08, prefer: ["Samantha", "Karen", "Zira"] },
+      en_cashier: { lang: "en-US", rate: 1.02, pitch: 1.05, prefer: ["Karen", "Samantha"] },
+      en_teacher: { lang: "en-GB", rate: 0.82, pitch: 0.9, prefer: ["Daniel", "Arthur", "Google UK English Male"] },
+      es_barista: { lang: "es-MX", rate: 1.0, pitch: 1.12, prefer: ["Paulina", "Monica", "Sabina"] },
+      es_driver: { lang: "es-MX", rate: 1.05, pitch: 0.9, prefer: ["Juan", "Carlos"] },
+      es_friend: { lang: "es-MX", rate: 1.1, pitch: 0.95, prefer: ["Jorge", "Juan"] },
+      es_coworker: { lang: "es-ES", rate: 0.97, pitch: 1.08, prefer: ["Monica", "Luciana", "Mónica"] },
+      es_cashier: { lang: "es-MX", rate: 1.02, pitch: 1.05, prefer: ["Paulina", "Monica"] },
+      es_teacher: { lang: "es-ES", rate: 0.8, pitch: 0.88, prefer: ["Monica", "Luciana", "Helena"] }
+    };
+
+    const CHARS = {
+      english: [
+        {
+          id: "barista",
+          name: "Emma",
+          role: "Coffee Shop Barista",
+          color: "#F59E0B",
+          scenario: "Downtown cafe · New York",
+          vibe: "Warm · Chatty · Seasonal drinks",
+          voiceKey: "en_barista",
+          accent: "🇺🇸 American"
+        },
+        {
+          id: "driver",
+          name: "Marcus",
+          role: "Uber Driver",
+          color: "#38BDF8",
+          scenario: "City ride · Chicago",
+          vibe: "Friendly · Curious · Sports talk",
+          voiceKey: "en_driver",
+          accent: "🇺🇸 American"
+        },
+        {
+          id: "friend",
+          name: "Jake",
+          role: "College Friend",
+          color: "#A78BFA",
+          scenario: "Campus hangout",
+          vibe: "Casual · Slang · Funny",
+          voiceKey: "en_friend",
+          accent: "🇺🇸 American"
+        },
+        {
+          id: "coworker",
+          name: "Sarah",
+          role: "Office Friend",
+          color: "#34D399",
+          scenario: "Office · Lunch break",
+          vibe: "Professional · Friendly · Office life",
+          voiceKey: "en_coworker",
+          accent: "🇺🇸 American"
+        },
+        {
+          id: "cashier",
+          name: "Maria",
+          role: "Supermarket Cashier",
+          color: "#FB7185",
+          scenario: "Supermarket checkout",
+          vibe: "Efficient · Polite · Small talk",
+          voiceKey: "en_cashier",
+          accent: "🇺🇸 American"
+        },
+        {
+          id: "teacher",
+          name: "Dr. Collins",
+          role: "English Teacher",
+          color: "#818CF8",
+          scenario: "Private lesson",
+          vibe: "Patient · Encouraging · Gentle corrections",
+          voiceKey: "en_teacher",
+          accent: "🇬🇧 British"
+        }
+      ],
+      spanish: [
+        {
+          id: "barista",
+          name: "Valentina",
+          role: "Barista de Cafe",
+          color: "#F59E0B",
+          scenario: "Cafe · Ciudad de Mexico",
+          vibe: "Calida · Charlatana · Recomienda bebidas",
+          voiceKey: "es_barista",
+          accent: "🇲🇽 Mexico"
+        },
+        {
+          id: "driver",
+          name: "Carlos",
+          role: "Conductor de Uber",
+          color: "#38BDF8",
+          scenario: "Viaje · CDMX",
+          vibe: "Amistoso · Curioso · Futbol",
+          voiceKey: "es_driver",
+          accent: "🇲🇽 Mexico"
+        },
+        {
+          id: "friend",
+          name: "Diego",
+          role: "Amigo de la Universidad",
+          color: "#A78BFA",
+          scenario: "Campus universitario",
+          vibe: "Casual · Slang · Divertido",
+          voiceKey: "es_friend",
+          accent: "🇲🇽 Mexico"
+        },
+        {
+          id: "coworker",
+          name: "Sofia",
+          role: "Companera de Trabajo",
+          color: "#34D399",
+          scenario: "Oficina · Hora de almuerzo",
+          vibe: "Profesional · Amistosa · Vida de oficina",
+          voiceKey: "es_coworker",
+          accent: "🇪🇸 Espana"
+        },
+        {
+          id: "cashier",
+          name: "Rosa",
+          role: "Cajera de Supermercado",
+          color: "#FB7185",
+          scenario: "Caja del supermercado",
+          vibe: "Eficiente · Amable · Charla breve",
+          voiceKey: "es_cashier",
+          accent: "🇲🇽 Mexico"
+        },
+        {
+          id: "teacher",
+          name: "Dra. Martinez",
+          role: "Profesora de Espanol",
+          color: "#818CF8",
+          scenario: "Clase particular",
+          vibe: "Paciente · Alentadora · Corrige suave",
+          voiceKey: "es_teacher",
+          accent: "🇪🇸 Espana"
+        }
+      ]
+    };
+
+    const LEVELS = {
+      english: [
+        { id: "beginner", label: "Beginner", desc: "I know basic words", emoji: "🌱" },
+        { id: "intermediate", label: "Intermediate", desc: "Simple conversations", emoji: "🌿" },
+        { id: "advanced", label: "Advanced", desc: "I want to sound native", emoji: "🌳" }
+      ],
+      spanish: [
+        { id: "beginner", label: "Principiante", desc: "Se palabras basicas", emoji: "🌱" },
+        { id: "intermediate", label: "Intermedio", desc: "Conversaciones basicas", emoji: "🌿" },
+        { id: "advanced", label: "Avanzado", desc: "Quiero sonar nativo", emoji: "🌳" }
+      ]
+    };
+
+    const GOALS = {
+      english: [
+        { id: "travel", label: "Travel", emoji: "✈️" },
+        { id: "work", label: "Work", emoji: "💼" },
+        { id: "interview", label: "Job Interview", emoji: "🎯" },
+        { id: "social", label: "Socializing", emoji: "🤝" },
+        { id: "business", label: "Business", emoji: "📊" },
+        { id: "casual", label: "Daily Fluency", emoji: "💬" }
+      ],
+      spanish: [
+        { id: "travel", label: "Viajes", emoji: "✈️" },
+        { id: "work", label: "Trabajo", emoji: "💼" },
+        { id: "interview", label: "Entrevistas", emoji: "🎯" },
+        { id: "social", label: "Socializar", emoji: "🤝" },
+        { id: "business", label: "Negocios", emoji: "📊" },
+        { id: "casual", label: "Fluidez diaria", emoji: "💬" }
+      ]
+    };
+
+    const WELCOMES = {
+      english: {
+        barista: () => "Hey! Welcome to Brew & Co. What can I get you? We just got a seasonal oat latte, and it is honestly amazing.",
+        driver: () => "Hey, hop in! I'm Marcus. Traffic is decent today, so where are we headed?",
+        friend: name => `Yooo ${name}! Finally! I've been here like 20 minutes haha. You good?`,
+        coworker: name => `${name}! Perfect timing. I was just grabbing coffee. Come with me, I need to vent about this morning's standup.`,
+        cashier: () => "Hi there! Find everything okay? We have buy-two-get-one on pasta this week if you need any.",
+        teacher: name => `Hello ${name}! Good to see you. How have you been feeling about your English this week?`
+      },
+      spanish: {
+        barista: () => "¡Hola! Bienvenido a Cafe Colibri. ¿Que le preparo? Tenemos un cafe de olla especial que esta increible hoy.",
+        driver: () => "¡Que tal! Subete, soy Carlos. El trafico esta pesado, pero llegamos. ¿A donde vamos?",
+        friend: name => `¡Ey ${name}, que onda! Ya tenia rato esperandote. ¿Como estas?`,
+        coworker: name => `¡${name}! Justo a tiempo. Iba por un cafe. ¿Me acompanas? Necesito contarte lo que paso en la junta.`,
+        cashier: () => "¡Buenas! ¿Encontro todo lo que buscaba? Tenemos oferta dos por uno en pasta esta semana.",
+        teacher: name => `¡Hola ${name}! ¿Como te has sentido con tu espanol ultimamente? ¿Hubo algun momento donde te bloqueaste?`
+      }
+    };
+
+    const REPLIES = {
+      english: {
+        barista: [
+          "Nice choice. If you want it smoother, say: \"Could I get it with oat milk, please?\" Very natural.",
+          "Totally. Small correction: English speakers usually say \"I'd like\" instead of \"I want\" when ordering.",
+          "That works! Would you like it hot or iced? Try answering with a full sentence."
+        ],
+        driver: [
+          "Got it. In casual English, you can say \"I'm heading to downtown\". Sounds natural and relaxed.",
+          "No problem. Traffic is a little heavy, but we should be there soon. What do you usually do around there?",
+          "Good sentence. Tiny tweak: say \"How long will it take?\" instead of \"How much time it takes?\""
+        ],
+        friend: [
+          "Haha, yeah, that sounds good. More native: \"I'm down\" means you agree to a plan.",
+          "Dude, that's pretty clear. Try adding one detail so it feels more like real small talk.",
+          "Totally. If you want to sound casual, say \"What's up?\" or \"What have you been up to?\""
+        ],
+        coworker: [
+          "That sounds professional. A smoother version is: \"Could we move the meeting to later today?\"",
+          "Good! At work, \"I'll follow up\" is a very useful phrase.",
+          "I get you. Try saying: \"I'm still working on it, but I can share an update soon.\""
+        ],
+        cashier: [
+          "Sure thing. You can say: \"Do you take card?\" or \"Can I pay by card?\"",
+          "Nice and simple. If you need a bag, say: \"Could I have a bag, please?\"",
+          "You're doing fine. For checkout, short polite sentences sound the most natural."
+        ],
+        teacher: [
+          "Good effort. A more natural version would be: \"I have been practicing, but speaking still feels hard.\"",
+          "You made yourself understood, which is the main goal. Now try making it a little more specific.",
+          "Nice. Remember, confidence comes from short clear sentences first, then style later."
+        ]
+      },
+      spanish: {
+        barista: [
+          "Muy bien. Una forma mas natural seria: \"Quisiera un cafe con leche, por favor.\"",
+          "Claro. ¿Lo quieres caliente o frio? Responde con una frase completa para practicar.",
+          "Suena bien. En una cafeteria, \"me das\" es casual y \"me podria dar\" es mas formal."
+        ],
+        driver: [
+          "Perfecto. Puedes decir: \"Voy al centro\" o \"Me lleva al centro, por favor.\"",
+          "Muy bien. El trafico esta pesado, pero llegamos. ¿Vas al trabajo o a ver a alguien?",
+          "Buena frase. Una version mas natural es: \"¿Cuanto tardamos en llegar?\""
+        ],
+        friend: [
+          "Jaja, si, suena natural. Tambien puedes decir: \"Me late\" cuando una idea te gusta.",
+          "Bien dicho. Para sonar mas casual, agrega algo como \"la verdad\" o \"un poco\".",
+          "Exacto. Entre amigos, \"¿que onda?\" funciona muy bien para iniciar una charla."
+        ],
+        coworker: [
+          "Eso suena profesional. Mas natural: \"¿Podemos mover la reunion para mas tarde?\"",
+          "Muy bien. En el trabajo, \"te mando un resumen\" es una frase super util.",
+          "Te entiendo. Puedes decir: \"Todavia estoy en eso, pero pronto te doy una actualizacion.\""
+        ],
+        cashier: [
+          "Claro. En la caja puedes decir: \"¿Puedo pagar con tarjeta?\"",
+          "Muy bien. Si necesitas bolsa, di: \"¿Me da una bolsa, por favor?\"",
+          "Perfecto. En compras, las frases cortas y amables funcionan mejor."
+        ],
+        teacher: [
+          "Buen intento. Una version mas natural seria: \"He estado practicando, pero hablar todavia me cuesta.\"",
+          "Se entiende muy bien. Ahora intenta agregar un detalle para que la frase sea mas completa.",
+          "Excelente progreso. Primero buscamos claridad; despues vamos puliendo el estilo."
+        ]
+      }
+    };
+
+    const state = {
+      screen: "splash",
+      step: 0,
+      profile: { name: "", lang: "english", level: "", goal: "", xp: 0, streak: 4, msgs: 0 },
+      character: null,
+      messages: [],
+      history: [],
+      input: "",
+      typing: false,
+      recording: false,
+      tab: "home",
+      chats: {},
+      voices: [],
+      speakingId: null,
+      autoPlay: true,
+      ttsOk: false,
+      recognition: null
+    };
+
+    const app = document.querySelector("#app");
+
+    function loadStoredState() {
+      try {
+        const raw = localStorage.getItem("fluentai-html-state");
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (saved.profile) state.profile = { ...state.profile, ...saved.profile };
+        if (saved.chats) state.chats = saved.chats;
+        if (typeof saved.autoPlay === "boolean") state.autoPlay = saved.autoPlay;
+        if (state.profile.name && state.profile.level && state.profile.goal) {
+          state.screen = "main";
+          state.tab = "home";
+        }
+      } catch (error) {
+        localStorage.removeItem("fluentai-html-state");
+      }
+    }
+
+    function persist() {
+      localStorage.setItem("fluentai-html-state", JSON.stringify({
+        profile: state.profile,
+        chats: state.chats,
+        autoPlay: state.autoPlay
+      }));
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function byId(id) {
+      return document.getElementById(id);
+    }
+
+    function fmtTime(date) {
+      return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function xpLevel() {
+      return Math.floor(state.profile.xp / 100) + 1;
+    }
+
+    function xpPct() {
+      return state.profile.xp % 100;
+    }
+
+    function isSpanish() {
+      return state.profile.lang === "spanish";
+    }
+
+    function chars() {
+      return CHARS[state.profile.lang] || CHARS.english;
+    }
+
+    function levels() {
+      return LEVELS[state.profile.lang] || LEVELS.english;
+    }
+
+    function goals() {
+      return GOALS[state.profile.lang] || GOALS.english;
+    }
+
+    function characterKey(character = state.character) {
+      if (!character) return "";
+      return `${state.profile.lang}_${character.id}`;
+    }
+
+    function memoji(character = state.character) {
+      return MEMOJI[characterKey(character)] || "🧑";
+    }
+
+    function pickVoice(key) {
+      const profile = VOICES[key];
+      if (!profile || !state.voices.length) return null;
+      for (const name of profile.prefer) {
+        const found = state.voices.find(voice => voice.name.toLowerCase().includes(name.toLowerCase()));
+        if (found) return found;
+      }
+      const language = profile.lang.split("-")[0];
+      return state.voices.find(voice => voice.lang.startsWith(language)) || state.voices.find(voice => voice.lang.startsWith("en")) || state.voices[0];
+    }
+
+    function stopSpeak(renderAfter = true) {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      state.speakingId = null;
+      if (renderAfter) render();
+    }
+
+    function speakMessage(text, voiceKey, id) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const voiceProfile = VOICES[voiceKey] || {};
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = voiceProfile.rate || 1;
+      utterance.pitch = voiceProfile.pitch || 1;
+      utterance.lang = voiceProfile.lang || "en-US";
+      const voice = pickVoice(voiceKey);
+      if (voice) utterance.voice = voice;
+      utterance.onstart = () => {
+        state.speakingId = id;
+        render();
+      };
+      utterance.onend = utterance.onerror = () => {
+        state.speakingId = null;
+        render();
+      };
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function toggleSpeak(id) {
+      const msg = state.messages.find(item => item.id === id);
+      if (!msg || msg.role === "user" || !state.character) return;
+      if (state.speakingId === id) {
+        stopSpeak();
+        return;
+      }
+      speakMessage(msg.text, state.character.voiceKey, msg.id);
+    }
+
+    function saveChat() {
+      if (!state.character) return;
+      state.chats[characterKey()] = {
+        msgs: state.messages,
+        hist: state.history
+      };
+      persist();
+    }
+
+    function loadVoices() {
+      const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+      state.voices = voices;
+      state.ttsOk = voices.length > 0;
+      if (state.screen === "main") render();
+    }
+
+    function generateReply(text) {
+      const lang = state.profile.lang;
+      const character = state.character;
+      const pool = REPLIES[lang]?.[character.id] || REPLIES.english.teacher;
+      const normalized = text.toLowerCase();
+      const isQuestion = /[?¿]|how|what|where|when|why|can|could|would|como|que|donde|cuando|puedo|podria/.test(normalized);
+      let index = Math.abs([...normalized].reduce((sum, char) => sum + char.charCodeAt(0), 0)) % pool.length;
+      if (isQuestion) index = (index + 1) % pool.length;
+      const base = pool[index];
+      const goal = goals().find(item => item.id === state.profile.goal)?.label || "";
+      const level = levels().find(item => item.id === state.profile.level)?.label || "";
+      if (lang === "spanish") {
+        if (state.profile.level === "beginner") return `${base} Vamos poco a poco. Tu objetivo de ${goal.toLowerCase()} encaja muy bien con frases simples.`;
+        if (state.profile.level === "advanced") return `${base} Para sonar mas nativo, agrega ritmo y una pequena reaccion emocional.`;
+        return `${base} Eso esta perfecto para nivel ${level.toLowerCase()}.`;
+      }
+      if (state.profile.level === "beginner") return `${base} Keep it short and clear. Your ${goal.toLowerCase()} goal fits simple phrases really well.`;
+      if (state.profile.level === "advanced") return `${base} To sound more native, add rhythm and a small emotional reaction.`;
+      return `${base} That is a strong ${level.toLowerCase()} answer.`;
+    }
+
+    function openChat(id) {
+      const character = chars().find(item => item.id === id);
+      if (!character) return;
+      stopSpeak(false);
+      state.character = character;
+      const saved = state.chats[characterKey(character)];
+      if (saved) {
+        state.messages = saved.msgs || [];
+        state.history = saved.hist || [];
+      } else {
+        const welcome = WELCOMES[state.profile.lang]?.[character.id]?.(state.profile.name) || `Hi ${state.profile.name}!`;
+        const message = { id: Date.now(), role: "ai", text: welcome, time: new Date().toISOString() };
+        state.messages = [message];
+        state.history = [{ role: "assistant", content: welcome }];
+        window.setTimeout(() => {
+          if (state.autoPlay && state.screen === "chat") speakMessage(welcome, character.voiceKey, message.id);
+        }, 650);
+      }
+      state.screen = "chat";
+      state.tab = "chat";
+      render();
+    }
+
+    function send(text = state.input) {
+      const clean = text.trim();
+      if (!clean || state.typing || !state.character) return;
+      stopSpeak(false);
+      const userMessage = { id: Date.now(), role: "user", text: clean, time: new Date().toISOString() };
+      state.messages = [...state.messages, userMessage];
+      state.history = [...state.history, { role: "user", content: clean }];
+      state.input = "";
+      state.typing = true;
+      render();
+
+      window.setTimeout(() => {
+        const reply = generateReply(clean);
+        const aiMessage = { id: Date.now() + 1, role: "ai", text: reply, time: new Date().toISOString() };
+        state.messages = [...state.messages, aiMessage];
+        state.history = [...state.history, { role: "assistant", content: reply }];
+        state.profile.xp += 10;
+        state.profile.msgs += 1;
+        state.typing = false;
+        saveChat();
+        render();
+        if (state.autoPlay) speakMessage(reply, state.character.voiceKey, aiMessage.id);
+      }, 720 + Math.random() * 780);
+    }
+
+    function toggleRecording() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Speech recognition requires Chrome or Edge.");
+        return;
+      }
+      if (state.recording) {
+        if (state.recognition) state.recognition.stop();
+        state.recording = false;
+        render();
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      recognition.lang = isSpanish() ? "es-MX" : "en-US";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.onresult = event => {
+        state.recording = false;
+        send(event.results[0][0].transcript);
+      };
+      recognition.onerror = recognition.onend = () => {
+        state.recording = false;
+        render();
+      };
+      recognition.start();
+      state.recognition = recognition;
+      state.recording = true;
+      render();
+    }
+
+    function setLanguage(lang) {
+      if (!CHARS[lang]) return;
+      stopSpeak(false);
+      state.profile.lang = lang;
+      state.profile.level = "";
+      state.profile.goal = "";
+      state.messages = [];
+      state.history = [];
+      state.character = null;
+      state.step = state.profile.name ? 2 : 1;
+      state.screen = "onboard";
+      state.tab = "home";
+      persist();
+      render();
+    }
+
+    function resetApp() {
+      stopSpeak(false);
+      localStorage.removeItem("fluentai-html-state");
+      state.screen = "entry";
+      state.step = 0;
+      state.profile = { name: "", lang: "english", level: "", goal: "", xp: 0, streak: 4, msgs: 0 };
+      state.character = null;
+      state.messages = [];
+      state.history = [];
+      state.input = "";
+      state.typing = false;
+      state.recording = false;
+      state.tab = "home";
+      state.chats = {};
+      state.autoPlay = true;
+      render();
+    }
+
+    function screenChrome(content, extraClass = "app-shell") {
+      return `<div class="orb-bg"></div><main class="${extraClass}">${content}</main>`;
+    }
+
+    function renderSplash() {
+      return `
+        <div class="orb-bg"></div>
+        <main class="screen-center">
+          <div class="splash-mark sp">🎙️</div>
+          <div class="fu d2" style="margin-top:20px">
+            <div class="grad-text" style="font-size:36px;font-weight:850;letter-spacing:0">FluentAI</div>
+            <div style="font-size:14px;color:var(--muted);margin-top:6px">Learn languages through real conversations</div>
+          </div>
+        </main>
+      `;
+    }
+
+    function renderEntry() {
+      return screenChrome(`
+        <section class="entry-wrap">
+          <div>
+            <div class="hero-cluster sp" aria-hidden="true">
+              <div class="hero-main-avatar">🧑‍💻</div>
+              <div class="orbit-avatar" style="--x:180px;--y:47px;--s:48px;--c:#F59E0B;--delay:0s">👩🏻‍🦰</div>
+              <div class="orbit-avatar" style="--x:152px;--y:193px;--s:48px;--c:#38BDF8;--delay:.8s">👨🏾</div>
+              <div class="orbit-avatar" style="--x:15px;--y:131px;--s:44px;--c:#A78BFA;--delay:1.6s">🧑🏼</div>
+              <div class="orbit-avatar" style="--x:44px;--y:32px;--s:46px;--c:#34D399;--delay:2.4s">👩🏽‍💼</div>
+            </div>
+            <div class="fu d1" style="text-align:center">
+              <h1 class="entry-title"><span class="grad-text">Speak fluently.</span><br>Sound native.</h1>
+            </div>
+            <p class="entry-copy fu d2">Practice real conversations with AI characters that actually feel like people.</p>
+            <div class="language-grid fu d3">
+              <button class="language-card" data-action="start-lang" data-lang="english" style="background:linear-gradient(135deg,#1E3A5F,#1a4080)">
+                <span>🇺🇸</span><strong>English</strong><span>6 characters</span>
+              </button>
+              <button class="language-card" data-action="start-lang" data-lang="spanish" style="background:linear-gradient(135deg,#5F1E1E,#801a1a)">
+                <span>🇲🇽</span><strong>Español</strong><span>6 personajes</span>
+              </button>
+            </div>
+            <div class="social-proof fu d4">
+              <div class="avatar-stack"><span>🧑🏼</span><span>👩🏽</span><span>👨🏾</span><span>👩🏻</span><span>🧑🏿</span></div>
+              <div>Join <b style="color:var(--purple-l)">2,000+</b> learners already speaking</div>
+            </div>
+          </div>
+          <div class="bottom-note fu d5">Free 7-day trial · No credit card needed</div>
+        </section>
+      `);
+    }
+
+    function renderOnboard() {
+      const activeStep = state.step || 1;
+      const es = isSpanish();
+      let stepContent = "";
+      if (activeStep === 1) {
+        stepContent = `
+          <section class="step">
+            <div class="step-label fu">STEP 1 OF 3</div>
+            <h1 class="fu d1">${es ? "¿Como te llamas?" : "What should we\ncall you?"}</h1>
+            <p class="fu d2">${es ? "Para que las conversaciones sean mas personales." : "Your name makes conversations feel more personal."}</p>
+            <div class="text-field glass fu d3">
+              <input id="nameInput" value="${escapeHTML(state.profile.name)}" placeholder="${es ? "Tu nombre..." : "Your first name..."}" autocomplete="given-name">
+            </div>
+            <button class="primary-button fu d4" data-action="next-name" ${state.profile.name.trim() ? "" : "disabled"}>${es ? "Continuar →" : "Continue →"}</button>
+          </section>
+        `;
+      }
+      if (activeStep === 2) {
+        stepContent = `
+          <section class="step">
+            <div class="step-label fu">STEP 2 OF 3</div>
+            <h1 class="fu d1">${es ? "¿Cual es tu nivel?" : "What's your level?"}</h1>
+            <p class="fu d2">${es ? "Adaptare cada conversacion a ti." : "I'll tailor every conversation to you."}</p>
+            <div class="choice-list">
+              ${levels().map((level, index) => `
+                <button class="choice-card glass fu d${Math.min(index + 2, 5)} ${state.profile.level === level.id ? "selected" : ""}" data-action="select-level" data-level="${level.id}">
+                  <span class="emoji">${level.emoji}</span>
+                  <span><strong>${level.label}</strong><small>${level.desc}</small></span>
+                  ${state.profile.level === level.id ? `<span class="check">✓</span>` : ""}
+                </button>
+              `).join("")}
+            </div>
+          </section>
+        `;
+      }
+      if (activeStep === 3) {
+        stepContent = `
+          <section class="step">
+            <div class="step-label fu">STEP 3 OF 3</div>
+            <h1 class="fu d1">${es ? "¿Por que aprendes?" : "Why are you learning?"}</h1>
+            <p class="fu d2">${es ? "Define tu vocabulario y escenarios." : "This shapes your vocabulary and scenarios."}</p>
+            <div class="goal-grid">
+              ${goals().map((goal, index) => `
+                <button class="goal-card glass fu d${Math.min(index + 2, 5)} ${state.profile.goal === goal.id ? "selected" : ""}" data-action="select-goal" data-goal="${goal.id}">
+                  <span>${goal.emoji}</span><strong>${goal.label}</strong>
+                </button>
+              `).join("")}
+            </div>
+            <button class="primary-button" data-action="finish-onboard" ${state.profile.goal ? "" : "disabled"}>${es ? "¡Empezar a aprender! 🚀" : "Start Learning 🚀"}</button>
+          </section>
+        `;
+      }
+      return `
+        <div class="orb-bg"></div>
+        <main class="onboard">
+          <div class="progress-dots">
+            ${[1, 2, 3].map(i => `<div class="progress-dot ${i <= activeStep ? "active" : ""}"></div>`).join("")}
+          </div>
+          ${stepContent}
+        </main>
+      `;
+    }
+
+    function renderHome() {
+      const es = isSpanish();
+      return `
+        <section class="tab-page">
+          <div class="home-header fu">
+            <div>
+              <h1><span class="grad-text">${es ? `¡Hola, ${escapeHTML(state.profile.name)}!` : `Hi, ${escapeHTML(state.profile.name)} 👋`}</span></h1>
+              <div class="muted-line">${es ? "Aprendiendo Español" : "Learning English"} · Level ${xpLevel()}</div>
+            </div>
+            <div class="streak"><span style="font-size:20px;line-height:1">🔥</span><span>${state.profile.streak} ${es ? "dias" : "days"}</span></div>
+          </div>
+          <div class="xp-card glass fu d1">
+            <div class="xp-top"><strong>Level ${xpLevel()}</strong><span>${state.profile.xp} XP · ${100 - xpPct()} to next</span></div>
+            <div class="xp-track"><div class="xp-fill" style="width:${xpPct()}%"></div></div>
+          </div>
+          <div class="language-switch fu d2">
+            <button class="${state.profile.lang === "english" ? "selected" : ""}" data-action="switch-lang" data-lang="english"><span>🇺🇸</span><span>English</span></button>
+            <button class="${state.profile.lang === "spanish" ? "selected" : ""}" data-action="switch-lang" data-lang="spanish"><span>🇲🇽</span><span>Español</span></button>
+          </div>
+          <div class="fu d3">
+            <div class="section-label">${es ? "PERSONAJES" : "CHARACTERS"}</div>
+            <div class="character-list">
+              ${chars().map((character, index) => {
+                const key = `${state.profile.lang}_${character.id}`;
+                const hasChat = Boolean(state.chats[key]);
+                return `
+                  <button class="character-card glass fu d${Math.min(index + 1, 5)}" data-action="open-chat" data-char="${character.id}" style="--char:${character.color}">
+                    <span class="memoji" style="--char:${character.color};--size:56px">${MEMOJI[key] || "🧑"}</span>
+                    <span class="character-main">
+                      <span class="character-row">
+                        <h2>${character.name}</h2>
+                        <span class="pill-row">${hasChat ? `<span class="pill active">${es ? "Activo" : "Active"}</span>` : ""}<span class="pill">${character.accent}</span></span>
+                      </span>
+                      <span class="character-role">${character.role}</span>
+                      <span class="character-vibe">${character.vibe}</span>
+                    </span>
+                    <span class="chevron">›</span>
+                  </button>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderProgress() {
+      const es = isSpanish();
+      const badges = [
+        { label: es ? "Primera Charla" : "First Chat", emoji: "💬", earned: state.profile.msgs >= 1 },
+        { label: es ? "10 Mensajes" : "10 Messages", emoji: "🔟", earned: state.profile.msgs >= 10 },
+        { label: "50 XP", emoji: "⚡", earned: state.profile.xp >= 50 },
+        { label: es ? "Maestro de Voz" : "Voice Master", emoji: "🎙️", earned: state.profile.msgs >= 5 },
+        { label: es ? "3 Personajes" : "3 Characters", emoji: "🎭", earned: Object.keys(state.chats).length >= 3 },
+        { label: es ? "Racha de 7 dias" : "Week Streak", emoji: "🔥", earned: state.profile.streak >= 7 }
+      ];
+      return `
+        <section class="tab-page">
+          <h1 class="tab-title fu"><span class="grad-text">${es ? "Tu Progreso" : "Your Progress"}</span></h1>
+          <div class="stats-grid fu d1">
+            ${[
+              { label: es ? "XP Total" : "Total XP", val: state.profile.xp, emoji: "⚡", color: T.amber },
+              { label: es ? "Mensajes" : "Messages", val: state.profile.msgs, emoji: "💬", color: T.purpleL },
+              { label: es ? "Racha" : "Day Streak", val: state.profile.streak, emoji: "🔥", color: T.red },
+              { label: es ? "Personajes" : "Characters", val: Object.keys(state.chats).length, emoji: "🎭", color: T.green }
+            ].map(stat => `
+              <div class="stat-card glass" style="--stat-color:${stat.color}">
+                <div class="stat-emoji">${stat.emoji}</div><strong>${stat.val}</strong><small>${stat.label}</small>
+              </div>
+            `).join("")}
+          </div>
+          <div class="highlight-card fu d2">
+            <div class="xp-top"><strong style="color:#fff">Level ${xpLevel()}</strong><span style="color:var(--purple-l)">${state.profile.xp} / ${xpLevel() * 100} XP</span></div>
+            <div class="xp-track"><div class="xp-fill" style="width:${xpPct()}%"></div></div>
+            <div style="font-size:12px;color:var(--muted);margin-top:8px">${es ? "+10 XP por respuesta · ¡Sigue chateando!" : "+10 XP per AI reply · Keep chatting! 🚀"}</div>
+          </div>
+          <div class="fu d3">
+            <div class="section-label">${es ? "LOGROS" : "ACHIEVEMENTS"}</div>
+            <div class="badges-grid">
+              ${badges.map(badge => `
+                <div class="badge-card glass ${badge.earned ? "earned" : ""}">
+                  <div class="badge-emoji">${badge.emoji}</div>
+                  <strong>${badge.label}</strong>
+                  ${badge.earned ? `<small>✓ ${es ? "Ganado" : "Earned"}</small>` : ""}
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderProfile() {
+      const es = isSpanish();
+      const level = levels().find(item => item.id === state.profile.level) || levels()[0];
+      const goal = goals().find(item => item.id === state.profile.goal) || goals()[0];
+      const rows = [
+        { label: es ? "Idioma" : "Language", val: es ? "🇲🇽 Español" : "🇺🇸 English" },
+        { label: es ? "Nivel" : "Level", val: `${level.emoji} ${level.label}` },
+        { label: es ? "Objetivo" : "Goal", val: `${goal.emoji} ${goal.label}` },
+        { label: "XP", val: `⚡ ${state.profile.xp}` },
+        { label: es ? "Mensajes" : "Messages", val: `💬 ${state.profile.msgs}` }
+      ];
+      return `
+        <section class="tab-page">
+          <h1 class="tab-title fu"><span class="grad-text">Profile</span></h1>
+          <div class="profile-card glass fu d1">
+            <div class="profile-avatar">${escapeHTML((state.profile.name || "?").slice(0, 1))}</div>
+            <div class="profile-name">${escapeHTML(state.profile.name)}</div>
+            <div class="profile-tags">
+              <span class="tag" style="background:rgba(139,92,246,.2);color:var(--purple-l);border-color:rgba(139,92,246,.3)">${es ? "🇲🇽 Español" : "🇺🇸 English"}</span>
+              <span class="tag" style="background:rgba(251,191,36,.15);color:var(--amber);border-color:rgba(251,191,36,.25)">${level.emoji} ${level.label}</span>
+              <span class="tag">${goal.emoji} ${goal.label}</span>
+            </div>
+          </div>
+          <div class="settings-card glass fu d2">
+            <div class="settings-title">🔊 ${es ? "Ajustes de Audio" : "Audio Settings"}</div>
+            <div class="settings-row">
+              <span><strong>${es ? "Reproduccion automatica" : "Auto-play voices"}</strong><small>${es ? "Los personajes hablan solos" : "Characters speak automatically"}</small></span>
+              <button class="toggle ${state.autoPlay ? "on" : ""}" data-action="toggle-autoplay" aria-label="Toggle auto-play voices"></button>
+            </div>
+            <div class="voice-status">
+              <span style="color:${state.ttsOk ? "var(--green)" : "var(--amber)"}">●</span>
+              ${state.ttsOk ? `${state.voices.length} ${es ? "voces disponibles" : "voices available"}` : (es ? "Cargando voces..." : "Loading voices...")}
+            </div>
+          </div>
+          ${rows.map(row => `<div class="profile-row glass fu d2"><span>${row.label}</span><strong>${row.val}</strong></div>`).join("")}
+          <button class="reset-button glass fu d3" data-action="reset">${es ? "Reiniciar y empezar de nuevo" : "Reset & Start Over"}</button>
+        </section>
+      `;
+    }
+
+    function renderMain() {
+      const es = isSpanish();
+      const content = state.tab === "progress" ? renderProgress() : state.tab === "profile" ? renderProfile() : renderHome();
+      return screenChrome(`
+        <div class="main-scroll">${content}</div>
+        <nav class="bottom-nav" aria-label="Main navigation">
+          <div class="nav-pill">
+            ${[
+              { id: "home", emoji: "🏠", en: "Characters", es: "Personajes" },
+              { id: "progress", emoji: "📊", en: "Progress", es: "Progreso" },
+              { id: "profile", emoji: "👤", en: "Profile", es: "Perfil" }
+            ].map(item => `
+              <button class="${state.tab === item.id ? "selected" : ""}" data-action="set-tab" data-tab="${item.id}">
+                <span class="nav-ico">${item.emoji}</span>
+                <span class="nav-label">${es ? item.es : item.en}</span>
+              </button>
+            `).join("")}
+          </div>
+        </nav>
+      `);
+    }
+
+    function renderChat() {
+      const character = state.character;
+      if (!character) return renderMain();
+      const es = isSpanish();
+      const speaking = state.speakingId !== null;
+      const key = characterKey();
+      return `
+        <main class="chat-shell" style="--chat-color:${character.color}">
+          <header class="chat-header">
+            <button class="icon-button" data-action="back-main" aria-label="Back">‹</button>
+            <span class="memoji ${speaking ? "speaking" : ""}" style="--char:${character.color};--size:46px">${MEMOJI[key] || "🧑"}</span>
+            <div class="chat-title">
+              <h1>${character.name}${speaking ? `<span class="speaking-pill">${es ? "Hablando" : "Speaking"} <span class="eq"><span></span><span></span><span></span></span></span>` : ""}</h1>
+              <div class="chat-subtitle"><span class="online-dot"></span><span>${character.role} · ${character.accent}</span></div>
+            </div>
+            <div class="chat-actions">
+              ${speaking ? `<button class="icon-button" data-action="stop-speak" aria-label="Stop audio" style="color:var(--red)">⏹</button>` : ""}
+              <button class="icon-button" data-action="toggle-autoplay" aria-label="Toggle voice playback" style="color:${state.autoPlay ? "var(--purple-l)" : "var(--muted)"}">${state.autoPlay ? "🔊" : "🔇"}</button>
+              <span class="xp-pill">⚡${state.profile.xp}</span>
+            </div>
+          </header>
+          ${state.autoPlay ? "" : `<div class="muted-banner">${es ? "🔇 Audio silenciado — toque em 🔊 em uma mensagem para ouvir" : "🔇 Audio muted — tap 🔊 on any message to hear it"}</div>`}
+          <section class="message-list" id="messageList">
+            ${state.messages.map((message, index) => renderMessage(message, index)).join("")}
+            ${state.typing ? `
+              <div class="message-row">
+                <span class="memoji" style="--char:${character.color};--size:34px">${MEMOJI[key] || "🧑"}</span>
+                <div class="typing-bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+              </div>
+            ` : ""}
+          </section>
+          <form class="chat-input" id="chatForm">
+            <label class="chat-field glass">
+              <input id="chatInput" value="${escapeHTML(state.input)}" placeholder="${es ? "Escribe un mensaje..." : "Type a message..."}" autocomplete="off">
+            </label>
+            <button class="round-button ${state.recording ? "recording" : ""}" type="button" data-action="toggle-recording" aria-label="Voice input">🎙️</button>
+            <button class="round-button send ${state.input.trim() && !state.typing ? "ready" : ""}" type="submit" aria-label="Send message">➤</button>
+          </form>
+        </main>
+      `;
+    }
+
+    function renderMessage(message, index) {
+      const character = state.character;
+      const key = characterKey();
+      const user = message.role === "user";
+      const speaking = state.speakingId === message.id;
+      const previous = state.messages[index - 1];
+      const showTime = !previous || (new Date(message.time) - new Date(previous.time)) > 60000;
+      return `
+        <div>
+          ${showTime ? `<div class="time-marker">${fmtTime(message.time)}</div>` : ""}
+          <div class="message-row ${user ? "user" : ""}">
+            ${user ? "" : `<span class="memoji ${speaking ? "speaking" : ""}" style="--char:${character.color};--size:34px">${MEMOJI[key] || "🧑"}</span>`}
+            <div class="message-column">
+              <div class="bubble ${speaking ? "speaking" : ""}">
+                ${escapeHTML(message.text)}
+                ${speaking && !user ? `<div class="bubble-wave"><span></span><span></span><span></span><span></span><span></span></div>` : ""}
+                ${user ? `<div class="delivered">✓✓</div>` : ""}
+              </div>
+              ${user ? "" : `<button class="hear-button ${speaking ? "active" : ""}" data-action="toggle-speak" data-id="${message.id}">${speaking ? `⏹ ${isSpanish() ? "Parar" : "Stop"}` : `🔊 ${isSpanish() ? "Escuchar" : "Hear"}`}</button>`}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function render() {
+      if (state.screen === "splash") app.innerHTML = renderSplash();
+      if (state.screen === "entry") app.innerHTML = renderEntry();
+      if (state.screen === "onboard") app.innerHTML = renderOnboard();
+      if (state.screen === "main") app.innerHTML = renderMain();
+      if (state.screen === "chat") app.innerHTML = renderChat();
+      bindEvents();
+      queueMicrotask(afterRender);
+    }
+
+    function afterRender() {
+      const nameInput = byId("nameInput");
+      if (nameInput && document.activeElement !== nameInput) {
+        nameInput.focus();
+        nameInput.setSelectionRange(nameInput.value.length, nameInput.value.length);
+      }
+      const chatInput = byId("chatInput");
+      if (chatInput && document.activeElement !== chatInput) {
+        chatInput.focus();
+        chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
+      }
+      const messageList = byId("messageList");
+      if (messageList) messageList.scrollTop = messageList.scrollHeight;
+    }
+
+    function bindEvents() {
+      app.querySelectorAll("[data-action]").forEach(element => {
+        element.addEventListener("click", event => {
+          const action = element.dataset.action;
+          if (action === "start-lang" || action === "switch-lang") setLanguage(element.dataset.lang);
+          if (action === "next-name") {
+            if (state.profile.name.trim()) {
+              state.step = 2;
+              persist();
+              render();
+            }
+          }
+          if (action === "select-level") {
+            state.profile.level = element.dataset.level;
+            persist();
+            render();
+            window.setTimeout(() => {
+              if (state.screen === "onboard" && state.profile.level) {
+                state.step = 3;
+                render();
+              }
+            }, 220);
+          }
+          if (action === "select-goal") {
+            state.profile.goal = element.dataset.goal;
+            persist();
+            render();
+          }
+          if (action === "finish-onboard") {
+            if (state.profile.goal) {
+              state.screen = "main";
+              state.tab = "home";
+              persist();
+              render();
+            }
+          }
+          if (action === "open-chat") openChat(element.dataset.char);
+          if (action === "set-tab") {
+            state.tab = element.dataset.tab;
+            render();
+          }
+          if (action === "back-main") {
+            stopSpeak(false);
+            saveChat();
+            state.screen = "main";
+            state.tab = "home";
+            render();
+          }
+          if (action === "toggle-autoplay") {
+            stopSpeak(false);
+            state.autoPlay = !state.autoPlay;
+            persist();
+            render();
+          }
+          if (action === "toggle-recording") toggleRecording();
+          if (action === "toggle-speak") toggleSpeak(Number(element.dataset.id));
+          if (action === "stop-speak") stopSpeak();
+          if (action === "reset") resetApp();
+        });
+      });
+
+      const nameInput = byId("nameInput");
+      if (nameInput) {
+        nameInput.addEventListener("input", event => {
+          state.profile.name = event.target.value;
+          persist();
+          const button = app.querySelector("[data-action='next-name']");
+          if (button) button.disabled = !state.profile.name.trim();
+        });
+        nameInput.addEventListener("keydown", event => {
+          if (event.key === "Enter" && state.profile.name.trim()) {
+            state.step = 2;
+            persist();
+            render();
+          }
+        });
+      }
+
+      const chatInput = byId("chatInput");
+      if (chatInput) {
+        chatInput.addEventListener("input", event => {
+          state.input = event.target.value;
+          const sendButton = app.querySelector(".round-button.send");
+          if (sendButton) sendButton.classList.toggle("ready", Boolean(state.input.trim()) && !state.typing);
+        });
+      }
+
+      const chatForm = byId("chatForm");
+      if (chatForm) {
+        chatForm.addEventListener("submit", event => {
+          event.preventDefault();
+          send(state.input);
+        });
+      }
+    }
+
+    loadStoredState();
+    render();
+    if (window.speechSynthesis) {
+      loadVoices();
+      window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    }
+    if (state.screen === "splash") {
+      window.setTimeout(() => {
+        if (state.screen === "splash") {
+          state.screen = state.profile.name && state.profile.level && state.profile.goal ? "main" : "entry";
+          render();
+        }
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
